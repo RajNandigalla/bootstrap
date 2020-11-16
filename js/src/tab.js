@@ -1,12 +1,13 @@
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v4.3.1): tab.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * Bootstrap (v5.0.0-alpha3): tab.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */
 
 import {
   getjQuery,
+  onDOMContentLoaded,
   TRANSITION_END,
   emulateTransitionEnd,
   getElementFromSelector,
@@ -24,7 +25,7 @@ import SelectorEngine from './dom/selector-engine'
  */
 
 const NAME = 'tab'
-const VERSION = '4.3.1'
+const VERSION = '5.0.0-alpha3'
 const DATA_KEY = 'bs.tab'
 const EVENT_KEY = `.${DATA_KEY}`
 const DATA_API_KEY = '.data-api'
@@ -45,7 +46,7 @@ const SELECTOR_DROPDOWN = '.dropdown'
 const SELECTOR_NAV_LIST_GROUP = '.nav, .list-group'
 const SELECTOR_ACTIVE = '.active'
 const SELECTOR_ACTIVE_UL = ':scope > li > .active'
-const SELECTOR_DATA_TOGGLE = '[data-toggle="tab"], [data-toggle="pill"], [data-toggle="list"]'
+const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="tab"], [data-bs-toggle="pill"], [data-bs-toggle="list"]'
 const SELECTOR_DROPDOWN_TOGGLE = '.dropdown-toggle'
 const SELECTOR_DROPDOWN_ACTIVE_CHILD = ':scope > .dropdown-menu .active'
 
@@ -80,7 +81,7 @@ class Tab {
 
     let previous
     const target = getElementFromSelector(this._element)
-    const listElement = SelectorEngine.closest(this._element, SELECTOR_NAV_LIST_GROUP)
+    const listElement = this._element.closest(SELECTOR_NAV_LIST_GROUP)
 
     if (listElement) {
       const itemSelector = listElement.nodeName === 'UL' || listElement.nodeName === 'OL' ? SELECTOR_ACTIVE_UL : SELECTOR_ACTIVE
@@ -186,7 +187,7 @@ class Tab {
     }
 
     if (element.parentNode && element.parentNode.classList.contains(CLASS_NAME_DROPDOWN_MENU)) {
-      const dropdownElement = SelectorEngine.closest(element, SELECTOR_DROPDOWN)
+      const dropdownElement = element.closest(SELECTOR_DROPDOWN)
 
       if (dropdownElement) {
         SelectorEngine.find(SELECTOR_DROPDOWN_TOGGLE)
@@ -235,23 +236,25 @@ EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, function (
   data.show()
 })
 
-const $ = getjQuery()
-
 /**
  * ------------------------------------------------------------------------
  * jQuery
  * ------------------------------------------------------------------------
- * add .tab to jQuery only if jQuery is present
+ * add .Tab to jQuery only if jQuery is present
  */
-/* istanbul ignore if */
-if ($) {
-  const JQUERY_NO_CONFLICT = $.fn[NAME]
-  $.fn[NAME] = Tab.jQueryInterface
-  $.fn[NAME].Constructor = Tab
-  $.fn[NAME].noConflict = () => {
-    $.fn[NAME] = JQUERY_NO_CONFLICT
-    return Tab.jQueryInterface
+
+onDOMContentLoaded(() => {
+  const $ = getjQuery()
+  /* istanbul ignore if */
+  if ($) {
+    const JQUERY_NO_CONFLICT = $.fn[NAME]
+    $.fn[NAME] = Tab.jQueryInterface
+    $.fn[NAME].Constructor = Tab
+    $.fn[NAME].noConflict = () => {
+      $.fn[NAME] = JQUERY_NO_CONFLICT
+      return Tab.jQueryInterface
+    }
   }
-}
+})
 
 export default Tab

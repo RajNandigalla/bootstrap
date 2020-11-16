@@ -1,12 +1,13 @@
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v4.3.1): carousel.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * Bootstrap (v5.0.0-alpha3): carousel.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */
 
 import {
   getjQuery,
+  onDOMContentLoaded,
   TRANSITION_END,
   emulateTransitionEnd,
   getElementFromSelector,
@@ -28,13 +29,13 @@ import SelectorEngine from './dom/selector-engine'
  */
 
 const NAME = 'carousel'
-const VERSION = '4.3.1'
+const VERSION = '5.0.0-alpha3'
 const DATA_KEY = 'bs.carousel'
 const EVENT_KEY = `.${DATA_KEY}`
 const DATA_API_KEY = '.data-api'
 
-const ARROW_LEFT_KEYCODE = 37 // KeyboardEvent.which value for left arrow key
-const ARROW_RIGHT_KEYCODE = 39 // KeyboardEvent.which value for right arrow key
+const ARROW_LEFT_KEY = 'ArrowLeft'
+const ARROW_RIGHT_KEY = 'ArrowRight'
 const TOUCHEVENT_COMPAT_WAIT = 500 // Time for mouse compat events to fire after touch
 const SWIPE_THRESHOLD = 40
 
@@ -90,8 +91,8 @@ const SELECTOR_ITEM = '.carousel-item'
 const SELECTOR_ITEM_IMG = '.carousel-item img'
 const SELECTOR_NEXT_PREV = '.carousel-item-next, .carousel-item-prev'
 const SELECTOR_INDICATORS = '.carousel-indicators'
-const SELECTOR_DATA_SLIDE = '[data-slide], [data-slide-to]'
-const SELECTOR_DATA_RIDE = '[data-ride="carousel"]'
+const SELECTOR_DATA_SLIDE = '[data-bs-slide], [data-bs-slide-to]'
+const SELECTOR_DATA_RIDE = '[data-bs-ride="carousel"]'
 
 const PointerType = {
   TOUCH: 'touch',
@@ -181,6 +182,8 @@ class Carousel {
     }
 
     if (this._config && this._config.interval && !this._isPaused) {
+      this._updateInterval()
+
       this._interval = setInterval(
         (document.visibilityState ? this.nextWhenVisible : this.next).bind(this),
         this._config.interval
@@ -263,15 +266,12 @@ class Carousel {
 
   _addEventListeners() {
     if (this._config.keyboard) {
-      EventHandler
-        .on(this._element, EVENT_KEYDOWN, event => this._keydown(event))
+      EventHandler.on(this._element, EVENT_KEYDOWN, event => this._keydown(event))
     }
 
     if (this._config.pause === 'hover') {
-      EventHandler
-        .on(this._element, EVENT_MOUSEENTER, event => this.pause(event))
-      EventHandler
-        .on(this._element, EVENT_MOUSELEAVE, event => this.cycle(event))
+      EventHandler.on(this._element, EVENT_MOUSEENTER, event => this.pause(event))
+      EventHandler.on(this._element, EVENT_MOUSELEAVE, event => this.cycle(event))
     }
 
     if (this._config.touch && this._touchSupported) {
@@ -342,12 +342,12 @@ class Carousel {
       return
     }
 
-    switch (event.which) {
-      case ARROW_LEFT_KEYCODE:
+    switch (event.key) {
+      case ARROW_LEFT_KEY:
         event.preventDefault()
         this.prev()
         break
-      case ARROW_RIGHT_KEYCODE:
+      case ARROW_RIGHT_KEY:
         event.preventDefault()
         this.next()
         break
@@ -412,6 +412,23 @@ class Carousel {
     }
   }
 
+  _updateInterval() {
+    const element = this._activeElement || SelectorEngine.findOne(SELECTOR_ACTIVE_ITEM, this._element)
+
+    if (!element) {
+      return
+    }
+
+    const elementInterval = Number.parseInt(element.getAttribute('data-bs-interval'), 10)
+
+    if (elementInterval) {
+      this._config.defaultInterval = this._config.defaultInterval || this._config.interval
+      this._config.interval = elementInterval
+    } else {
+      this._config.interval = this._config.defaultInterval || this._config.interval
+    }
+  }
+
   _slide(direction, element) {
     const activeElement = SelectorEngine.findOne(SELECTOR_ACTIVE_ITEM, this._element)
     const activeElementIndex = this._getItemIndex(activeElement)
@@ -457,6 +474,7 @@ class Carousel {
     }
 
     this._setActiveIndicatorElement(nextElement)
+    this._activeElement = nextElement
 
     if (this._element.classList.contains(CLASS_NAME_SLIDE)) {
       nextElement.classList.add(orderClassName)
@@ -466,34 +484,25 @@ class Carousel {
       activeElement.classList.add(directionalClassName)
       nextElement.classList.add(directionalClassName)
 
-      const nextElementInterval = parseInt(nextElement.getAttribute('data-interval'), 10)
-      if (nextElementInterval) {
-        this._config.defaultInterval = this._config.defaultInterval || this._config.interval
-        this._config.interval = nextElementInterval
-      } else {
-        this._config.interval = this._config.defaultInterval || this._config.interval
-      }
-
       const transitionDuration = getTransitionDurationFromElement(activeElement)
 
-      EventHandler
-        .one(activeElement, TRANSITION_END, () => {
-          nextElement.classList.remove(directionalClassName, orderClassName)
-          nextElement.classList.add(CLASS_NAME_ACTIVE)
+      EventHandler.one(activeElement, TRANSITION_END, () => {
+        nextElement.classList.remove(directionalClassName, orderClassName)
+        nextElement.classList.add(CLASS_NAME_ACTIVE)
 
-          activeElement.classList.remove(CLASS_NAME_ACTIVE, orderClassName, directionalClassName)
+        activeElement.classList.remove(CLASS_NAME_ACTIVE, orderClassName, directionalClassName)
 
-          this._isSliding = false
+        this._isSliding = false
 
-          setTimeout(() => {
-            EventHandler.trigger(this._element, EVENT_SLID, {
-              relatedTarget: nextElement,
-              direction: eventDirectionName,
-              from: activeElementIndex,
-              to: nextElementIndex
-            })
-          }, 0)
-        })
+        setTimeout(() => {
+          EventHandler.trigger(this._element, EVENT_SLID, {
+            relatedTarget: nextElement,
+            direction: eventDirectionName,
+            from: activeElementIndex,
+            to: nextElementIndex
+          })
+        }, 0)
+      })
 
       emulateTransitionEnd(activeElement, transitionDuration)
     } else {
@@ -567,7 +576,7 @@ class Carousel {
       ...Manipulator.getDataAttributes(target),
       ...Manipulator.getDataAttributes(this)
     }
-    const slideIndex = this.getAttribute('data-slide-to')
+    const slideIndex = this.getAttribute('data-bs-slide-to')
 
     if (slideIndex) {
       config.interval = false
@@ -593,8 +602,7 @@ class Carousel {
  * ------------------------------------------------------------------------
  */
 
-EventHandler
-  .on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_SLIDE, Carousel.dataApiClickHandler)
+EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_SLIDE, Carousel.dataApiClickHandler)
 
 EventHandler.on(window, EVENT_LOAD_DATA_API, () => {
   const carousels = SelectorEngine.find(SELECTOR_DATA_RIDE)
@@ -604,23 +612,25 @@ EventHandler.on(window, EVENT_LOAD_DATA_API, () => {
   }
 })
 
-const $ = getjQuery()
-
 /**
  * ------------------------------------------------------------------------
  * jQuery
  * ------------------------------------------------------------------------
- * add .carousel to jQuery only if jQuery is present
+ * add .Carousel to jQuery only if jQuery is present
  */
-/* istanbul ignore if */
-if ($) {
-  const JQUERY_NO_CONFLICT = $.fn[NAME]
-  $.fn[NAME] = Carousel.jQueryInterface
-  $.fn[NAME].Constructor = Carousel
-  $.fn[NAME].noConflict = () => {
-    $.fn[NAME] = JQUERY_NO_CONFLICT
-    return Carousel.jQueryInterface
+
+onDOMContentLoaded(() => {
+  const $ = getjQuery()
+  /* istanbul ignore if */
+  if ($) {
+    const JQUERY_NO_CONFLICT = $.fn[NAME]
+    $.fn[NAME] = Carousel.jQueryInterface
+    $.fn[NAME].Constructor = Carousel
+    $.fn[NAME].noConflict = () => {
+      $.fn[NAME] = JQUERY_NO_CONFLICT
+      return Carousel.jQueryInterface
+    }
   }
-}
+})
 
 export default Carousel

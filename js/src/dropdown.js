@@ -1,12 +1,13 @@
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v4.3.1): dropdown.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * Bootstrap (v5.0.0-alpha3): dropdown.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */
 
 import {
   getjQuery,
+  onDOMContentLoaded,
   getElementFromSelector,
   isElement,
   isVisible,
@@ -26,19 +27,19 @@ import SelectorEngine from './dom/selector-engine'
  */
 
 const NAME = 'dropdown'
-const VERSION = '4.3.1'
+const VERSION = '5.0.0-alpha3'
 const DATA_KEY = 'bs.dropdown'
 const EVENT_KEY = `.${DATA_KEY}`
 const DATA_API_KEY = '.data-api'
 
-const ESCAPE_KEYCODE = 27 // KeyboardEvent.which value for Escape (Esc) key
-const SPACE_KEYCODE = 32 // KeyboardEvent.which value for space key
-const TAB_KEYCODE = 9 // KeyboardEvent.which value for tab key
-const ARROW_UP_KEYCODE = 38 // KeyboardEvent.which value for up arrow key
-const ARROW_DOWN_KEYCODE = 40 // KeyboardEvent.which value for down arrow key
-const RIGHT_MOUSE_BUTTON_WHICH = 3 // MouseEvent.which value for the right button (assuming a right-handed mouse)
+const ESCAPE_KEY = 'Escape'
+const SPACE_KEY = 'Space'
+const TAB_KEY = 'Tab'
+const ARROW_UP_KEY = 'ArrowUp'
+const ARROW_DOWN_KEY = 'ArrowDown'
+const RIGHT_MOUSE_BUTTON = 2 // MouseEvent.button value for the secondary button, usually the right button
 
-const REGEXP_KEYDOWN = new RegExp(`${ARROW_UP_KEYCODE}|${ARROW_DOWN_KEYCODE}|${ESCAPE_KEYCODE}`)
+const REGEXP_KEYDOWN = new RegExp(`${ARROW_UP_KEY}|${ARROW_DOWN_KEY}|${ESCAPE_KEY}`)
 
 const EVENT_HIDE = `hide${EVENT_KEY}`
 const EVENT_HIDDEN = `hidden${EVENT_KEY}`
@@ -58,7 +59,7 @@ const CLASS_NAME_MENURIGHT = 'dropdown-menu-right'
 const CLASS_NAME_NAVBAR = 'navbar'
 const CLASS_NAME_POSITION_STATIC = 'position-static'
 
-const SELECTOR_DATA_TOGGLE = '[data-toggle="dropdown"]'
+const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="dropdown"]'
 const SELECTOR_FORM_CHILD = '.dropdown form'
 const SELECTOR_MENU = '.dropdown-menu'
 const SELECTOR_NAVBAR_NAV = '.navbar-nav'
@@ -189,7 +190,7 @@ class Dropdown {
     // only needed because of broken event delegation on iOS
     // https://www.quirksmode.org/blog/archives/2014/02/mouse_event_bub.html
     if ('ontouchstart' in document.documentElement &&
-      !SelectorEngine.closest(parent, SELECTOR_NAVBAR_NAV)) {
+      !parent.closest(SELECTOR_NAVBAR_NAV)) {
       [].concat(...document.body.children)
         .forEach(elem => EventHandler.on(elem, 'mouseover', null, noop()))
     }
@@ -197,8 +198,8 @@ class Dropdown {
     this._element.focus()
     this._element.setAttribute('aria-expanded', true)
 
-    Manipulator.toggleClass(this._menu, CLASS_NAME_SHOW)
-    Manipulator.toggleClass(this._element, CLASS_NAME_SHOW)
+    this._menu.classList.toggle(CLASS_NAME_SHOW)
+    this._element.classList.toggle(CLASS_NAME_SHOW)
     EventHandler.trigger(parent, EVENT_SHOWN, relatedTarget)
   }
 
@@ -222,8 +223,8 @@ class Dropdown {
       this._popper.destroy()
     }
 
-    Manipulator.toggleClass(this._menu, CLASS_NAME_SHOW)
-    Manipulator.toggleClass(this._element, CLASS_NAME_SHOW)
+    this._menu.classList.toggle(CLASS_NAME_SHOW)
+    this._element.classList.toggle(CLASS_NAME_SHOW)
     EventHandler.trigger(parent, EVENT_HIDDEN, relatedTarget)
   }
 
@@ -262,11 +263,7 @@ class Dropdown {
       ...config
     }
 
-    typeCheckConfig(
-      NAME,
-      config,
-      this.constructor.DefaultType
-    )
+    typeCheckConfig(NAME, config, this.constructor.DefaultType)
 
     return config
   }
@@ -281,10 +278,9 @@ class Dropdown {
 
     // Handle dropup
     if (parentDropdown.classList.contains(CLASS_NAME_DROPUP)) {
-      placement = PLACEMENT_TOP
-      if (this._menu.classList.contains(CLASS_NAME_MENURIGHT)) {
-        placement = PLACEMENT_TOPEND
-      }
+      placement = this._menu.classList.contains(CLASS_NAME_MENURIGHT) ?
+        PLACEMENT_TOPEND :
+        PLACEMENT_TOP
     } else if (parentDropdown.classList.contains(CLASS_NAME_DROPRIGHT)) {
       placement = PLACEMENT_RIGHT
     } else if (parentDropdown.classList.contains(CLASS_NAME_DROPLEFT)) {
@@ -297,7 +293,7 @@ class Dropdown {
   }
 
   _detectNavbar() {
-    return Boolean(SelectorEngine.closest(this._element, `.${CLASS_NAME_NAVBAR}`))
+    return Boolean(this._element.closest(`.${CLASS_NAME_NAVBAR}`))
   }
 
   _getOffset() {
@@ -307,7 +303,7 @@ class Dropdown {
       offset.fn = data => {
         data.offsets = {
           ...data.offsets,
-          ...this._config.offset(data.offsets, this._element) || {}
+          ...(this._config.offset(data.offsets, this._element) || {})
         }
 
         return data
@@ -372,8 +368,8 @@ class Dropdown {
   }
 
   static clearMenus(event) {
-    if (event && (event.which === RIGHT_MOUSE_BUTTON_WHICH ||
-      (event.type === 'keyup' && event.which !== TAB_KEYCODE))) {
+    if (event && (event.button === RIGHT_MOUSE_BUTTON ||
+      (event.type === 'keyup' && event.key !== TAB_KEY))) {
       return
     }
 
@@ -401,7 +397,7 @@ class Dropdown {
 
       if (event && ((event.type === 'click' &&
           /input|textarea/i.test(event.target.tagName)) ||
-          (event.type === 'keyup' && event.which === TAB_KEYCODE)) &&
+          (event.type === 'keyup' && event.key === TAB_KEY)) &&
           dropdownMenu.contains(event.target)) {
         continue
       }
@@ -443,10 +439,10 @@ class Dropdown {
     //    - If key is not up or down => not a dropdown command
     //    - If trigger inside the menu => not a dropdown command
     if (/input|textarea/i.test(event.target.tagName) ?
-      event.which === SPACE_KEYCODE || (event.which !== ESCAPE_KEYCODE &&
-      ((event.which !== ARROW_DOWN_KEYCODE && event.which !== ARROW_UP_KEYCODE) ||
-        SelectorEngine.closest(event.target, SELECTOR_MENU))) :
-      !REGEXP_KEYDOWN.test(event.which)) {
+      event.key === SPACE_KEY || (event.key !== ESCAPE_KEY &&
+      ((event.key !== ARROW_DOWN_KEY && event.key !== ARROW_UP_KEY) ||
+        event.target.closest(SELECTOR_MENU))) :
+      !REGEXP_KEYDOWN.test(event.key)) {
       return
     }
 
@@ -460,34 +456,36 @@ class Dropdown {
     const parent = Dropdown.getParentFromElement(this)
     const isActive = this.classList.contains(CLASS_NAME_SHOW)
 
-    if (event.which === ESCAPE_KEYCODE) {
+    if (event.key === ESCAPE_KEY) {
       const button = this.matches(SELECTOR_DATA_TOGGLE) ? this : SelectorEngine.prev(this, SELECTOR_DATA_TOGGLE)[0]
       button.focus()
       Dropdown.clearMenus()
       return
     }
 
-    if (!isActive || event.which === SPACE_KEYCODE) {
+    if (!isActive || event.key === SPACE_KEY) {
       Dropdown.clearMenus()
       return
     }
 
-    const items = SelectorEngine.find(SELECTOR_VISIBLE_ITEMS, parent)
-      .filter(isVisible)
+    const items = SelectorEngine.find(SELECTOR_VISIBLE_ITEMS, parent).filter(isVisible)
 
     if (!items.length) {
       return
     }
 
-    let index = items.indexOf(event.target) || 0
+    let index = items.indexOf(event.target)
 
-    if (event.which === ARROW_UP_KEYCODE && index > 0) { // Up
+    if (event.key === ARROW_UP_KEY && index > 0) { // Up
       index--
     }
 
-    if (event.which === ARROW_DOWN_KEYCODE && index < items.length - 1) { // Down
+    if (event.key === ARROW_DOWN_KEY && index < items.length - 1) { // Down
       index++
     }
+
+    // index is -1 if the first keydown is an ArrowUp
+    index = index === -1 ? 0 : index
 
     items[index].focus()
   }
@@ -512,26 +510,27 @@ EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, function (
   event.stopPropagation()
   Dropdown.dropdownInterface(this, 'toggle')
 })
-EventHandler
-  .on(document, EVENT_CLICK_DATA_API, SELECTOR_FORM_CHILD, e => e.stopPropagation())
-
-const $ = getjQuery()
+EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_FORM_CHILD, e => e.stopPropagation())
 
 /**
  * ------------------------------------------------------------------------
  * jQuery
  * ------------------------------------------------------------------------
- * add .dropdown to jQuery only if jQuery is present
+ * add .Dropdown to jQuery only if jQuery is present
  */
-/* istanbul ignore if */
-if ($) {
-  const JQUERY_NO_CONFLICT = $.fn[NAME]
-  $.fn[NAME] = Dropdown.jQueryInterface
-  $.fn[NAME].Constructor = Dropdown
-  $.fn[NAME].noConflict = () => {
-    $.fn[NAME] = JQUERY_NO_CONFLICT
-    return Dropdown.jQueryInterface
+
+onDOMContentLoaded(() => {
+  const $ = getjQuery()
+  /* istanbul ignore if */
+  if ($) {
+    const JQUERY_NO_CONFLICT = $.fn[NAME]
+    $.fn[NAME] = Dropdown.jQueryInterface
+    $.fn[NAME].Constructor = Dropdown
+    $.fn[NAME].noConflict = () => {
+      $.fn[NAME] = JQUERY_NO_CONFLICT
+      return Dropdown.jQueryInterface
+    }
   }
-}
+})
 
 export default Dropdown

@@ -1,12 +1,13 @@
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v4.3.1): alert.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * Bootstrap (v5.0.0-alpha3): alert.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */
 
 import {
   getjQuery,
+  onDOMContentLoaded,
   TRANSITION_END,
   emulateTransitionEnd,
   getElementFromSelector,
@@ -14,7 +15,6 @@ import {
 } from './util/index'
 import Data from './dom/data'
 import EventHandler from './dom/event-handler'
-import SelectorEngine from './dom/selector-engine'
 
 /**
  * ------------------------------------------------------------------------
@@ -23,12 +23,12 @@ import SelectorEngine from './dom/selector-engine'
  */
 
 const NAME = 'alert'
-const VERSION = '4.3.1'
+const VERSION = '5.0.0-alpha3'
 const DATA_KEY = 'bs.alert'
 const EVENT_KEY = `.${DATA_KEY}`
 const DATA_API_KEY = '.data-api'
 
-const SELECTOR_DISMISS = '[data-dismiss="alert"]'
+const SELECTOR_DISMISS = '[data-bs-dismiss="alert"]'
 
 const EVENT_CLOSE = `close${EVENT_KEY}`
 const EVENT_CLOSED = `closed${EVENT_KEY}`
@@ -62,11 +62,7 @@ class Alert {
   // Public
 
   close(element) {
-    let rootElement = this._element
-    if (element) {
-      rootElement = this._getRootElement(element)
-    }
-
+    const rootElement = element ? this._getRootElement(element) : this._element
     const customEvent = this._triggerCloseEvent(rootElement)
 
     if (customEvent === null || customEvent.defaultPrevented) {
@@ -84,13 +80,7 @@ class Alert {
   // Private
 
   _getRootElement(element) {
-    let parent = getElementFromSelector(element)
-
-    if (!parent) {
-      parent = SelectorEngine.closest(element, `.${CLASSNAME_ALERT}`)
-    }
-
-    return parent
+    return getElementFromSelector(element) || element.closest(`.${CLASSNAME_ALERT}`)
   }
 
   _triggerCloseEvent(element) {
@@ -107,8 +97,7 @@ class Alert {
 
     const transitionDuration = getTransitionDurationFromElement(element)
 
-    EventHandler
-      .one(element, TRANSITION_END, () => this._destroyElement(element))
+    EventHandler.one(element, TRANSITION_END, () => this._destroyElement(element))
     emulateTransitionEnd(element, transitionDuration)
   }
 
@@ -156,27 +145,27 @@ class Alert {
  * Data Api implementation
  * ------------------------------------------------------------------------
  */
-EventHandler
-  .on(document, EVENT_CLICK_DATA_API, SELECTOR_DISMISS, Alert.handleDismiss(new Alert()))
-
-const $ = getjQuery()
+EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DISMISS, Alert.handleDismiss(new Alert()))
 
 /**
  * ------------------------------------------------------------------------
  * jQuery
  * ------------------------------------------------------------------------
- * add .alert to jQuery only if jQuery is present
+ * add .Alert to jQuery only if jQuery is present
  */
 
-/* istanbul ignore if */
-if ($) {
-  const JQUERY_NO_CONFLICT = $.fn[NAME]
-  $.fn[NAME] = Alert.jQueryInterface
-  $.fn[NAME].Constructor = Alert
-  $.fn[NAME].noConflict = () => {
-    $.fn[NAME] = JQUERY_NO_CONFLICT
-    return Alert.jQueryInterface
+onDOMContentLoaded(() => {
+  const $ = getjQuery()
+  /* istanbul ignore if */
+  if ($) {
+    const JQUERY_NO_CONFLICT = $.fn[NAME]
+    $.fn[NAME] = Alert.jQueryInterface
+    $.fn[NAME].Constructor = Alert
+    $.fn[NAME].noConflict = () => {
+      $.fn[NAME] = JQUERY_NO_CONFLICT
+      return Alert.jQueryInterface
+    }
   }
-}
+})
 
 export default Alert

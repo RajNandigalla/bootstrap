@@ -1,7 +1,7 @@
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v4.3.1): util/index.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * Bootstrap (v5.0.0-alpha3): util/index.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */
 
@@ -26,14 +26,14 @@ const toType = obj => {
 
 const getUID = prefix => {
   do {
-    prefix += ~~(Math.random() * MAX_UID) // "~~" acts like a faster Math.floor() here
+    prefix += Math.floor(Math.random() * MAX_UID)
   } while (document.getElementById(prefix))
 
   return prefix
 }
 
 const getSelector = element => {
-  let selector = element.getAttribute('data-target')
+  let selector = element.getAttribute('data-bs-target')
 
   if (!selector || selector === '#') {
     const hrefAttr = element.getAttribute('href')
@@ -71,8 +71,8 @@ const getTransitionDurationFromElement = element => {
     transitionDelay
   } = window.getComputedStyle(element)
 
-  const floatTransitionDuration = parseFloat(transitionDuration)
-  const floatTransitionDelay = parseFloat(transitionDelay)
+  const floatTransitionDuration = Number.parseFloat(transitionDuration)
+  const floatTransitionDelay = Number.parseFloat(transitionDelay)
 
   // Return 0 if element or transition duration is not found
   if (!floatTransitionDuration && !floatTransitionDelay) {
@@ -83,7 +83,7 @@ const getTransitionDurationFromElement = element => {
   transitionDuration = transitionDuration.split(',')[0]
   transitionDelay = transitionDelay.split(',')[0]
 
-  return (parseFloat(transitionDuration) + parseFloat(transitionDelay)) * MILLISECONDS_MULTIPLIER
+  return (Number.parseFloat(transitionDuration) + Number.parseFloat(transitionDelay)) * MILLISECONDS_MULTIPLIER
 }
 
 const triggerTransitionEnd = element => {
@@ -110,21 +110,20 @@ const emulateTransitionEnd = (element, duration) => {
 }
 
 const typeCheckConfig = (componentName, config, configTypes) => {
-  Object.keys(configTypes)
-    .forEach(property => {
-      const expectedTypes = configTypes[property]
-      const value = config[property]
-      const valueType = value && isElement(value) ?
-        'element' :
-        toType(value)
+  Object.keys(configTypes).forEach(property => {
+    const expectedTypes = configTypes[property]
+    const value = config[property]
+    const valueType = value && isElement(value) ?
+      'element' :
+      toType(value)
 
-      if (!new RegExp(expectedTypes).test(valueType)) {
-        throw new Error(
-          `${componentName.toUpperCase()}: ` +
-          `Option "${property}" provided type "${valueType}" ` +
-          `but expected type "${expectedTypes}".`)
-      }
-    })
+    if (!new RegExp(expectedTypes).test(valueType)) {
+      throw new Error(
+        `${componentName.toUpperCase()}: ` +
+        `Option "${property}" provided type "${valueType}" ` +
+        `but expected type "${expectedTypes}".`)
+    }
+  })
 }
 
 const isVisible = element => {
@@ -174,15 +173,22 @@ const reflow = element => element.offsetHeight
 const getjQuery = () => {
   const { jQuery } = window
 
-  if (jQuery && !document.body.hasAttribute('data-no-jquery')) {
+  if (jQuery && !document.body.hasAttribute('data-bs-no-jquery')) {
     return jQuery
   }
 
   return null
 }
 
+const onDOMContentLoaded = callback => {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', callback)
+  } else {
+    callback()
+  }
+}
+
 export {
-  getjQuery,
   TRANSITION_END,
   getUID,
   getSelectorFromElement,
@@ -195,5 +201,7 @@ export {
   isVisible,
   findShadowRoot,
   noop,
-  reflow
+  reflow,
+  getjQuery,
+  onDOMContentLoaded
 }

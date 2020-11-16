@@ -1,11 +1,9 @@
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v4.3.1): dom/selector-engine.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * Bootstrap (v5.0.0-alpha3): dom/selector-engine.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */
-
-import { find as findFn, findOne } from './polyfill'
 
 /**
  * ------------------------------------------------------------------------
@@ -21,11 +19,11 @@ const SelectorEngine = {
   },
 
   find(selector, element = document.documentElement) {
-    return [].concat(...findFn.call(element, selector))
+    return [].concat(...Element.prototype.querySelectorAll.call(element, selector))
   },
 
   findOne(selector, element = document.documentElement) {
-    return findOne.call(element, selector)
+    return Element.prototype.querySelector.call(element, selector)
   },
 
   children(element, selector) {
@@ -48,10 +46,6 @@ const SelectorEngine = {
     }
 
     return parents
-  },
-
-  closest(element, selector) {
-    return element.closest(selector)
   },
 
   prev(element, selector) {
