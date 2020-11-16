@@ -3,8 +3,6 @@
 //
 
 .bd-content {
-  order: 1;
-
   // Offset for the sticky header
   > [id] {
     @include media-breakpoint-up(md) {
@@ -17,7 +15,7 @@
   }
 
   > h3 {
-    margin-top: 1.5rem;
+    margin-top: 2rem;
   }
 
   > ul li,
@@ -29,8 +27,9 @@
   > .table {
     max-width: 100%;
     margin-bottom: 1.5rem;
+    @include font-size(.875rem);
 
-    @include media-breakpoint-down(md) {
+    @include media-breakpoint-down(lg) {
       display: block;
       overflow-x: auto;
 
@@ -68,4 +67,8 @@
 
 .bd-text-purple-bright {
   color: $bd-purple-bright;
+}
+
+.bd-bg-purple-bright {
+  background-color: $bd-purple-bright;
 }

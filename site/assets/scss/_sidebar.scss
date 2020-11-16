@@ -1,4 +1,11 @@
+.bd-sidebar {
+  @include media-breakpoint-down(md) {
+    margin: 0 -.75rem 1rem;
+  }
+}
+
 .bd-links {
+  overflow: auto;
   font-weight: 600;
 
   @include media-breakpoint-up(md) {
@@ -14,14 +21,19 @@
     overflow-y: auto;
   }
 
+  > ul {
+    @include media-breakpoint-down(md) {
+      padding: 1.5rem .75rem;
+      background-color: $gray-100;
+      border-bottom: 1px solid $gray-200;
+    }
+  }
+
   a {
-    display: inline-flex;
-    align-items: center;
     padding: .1875rem .5rem;
     margin-top: .125rem;
     color: rgba($black, .65);
     text-decoration: if($link-decoration == none, null, none);
-    @include border-radius(.25rem);
 
     &:hover,
     &:focus {
@@ -52,12 +64,6 @@
           transform: rotate(90deg);
         }
       }
-    }
-
-    // Adjust font size and font weights in submenu
-    + ul {
-      @include font-size(.875rem);
-      font-weight: 400;
     }
   }
 
